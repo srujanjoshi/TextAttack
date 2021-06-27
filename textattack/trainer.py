@@ -52,7 +52,7 @@ class Trainer:
         >>> tokenizer = transformers.AutoTokenizer.from_pretrained("bert-base-uncased")
         >>> model_wrapper = textattack.models.wrappers.HuggingFaceModelWrapper(model, tokenizer)
 
-        >>> # We only use DeepWordBugGao2018 to demonstration purposes.
+        >>> # We only use DeepWordBugGao2018 for demonstration purposes.
         >>> attack = textattack.attack_recipes.DeepWordBugGao2018.build(model_wrapper)
         >>> train_dataset = textattack.datasets.HuggingFaceDataset("imdb", split="train")
         >>> eval_dataset = textattack.datasets.HuggingFaceDataset("imdb", split="test")

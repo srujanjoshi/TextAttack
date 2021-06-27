@@ -56,7 +56,7 @@ class Attack:
         >>> goal_function = textattack.goal_functions.UntargetedClassification(model_wrapper)
         >>> constraints = [
         ...     RepeatModification(),
-        ...     StopwordModification()
+        ...     StopwordModification(),
         ...     WordEmbeddingDistance(min_cos_sim=0.9)
         ... ]
         >>> transformation = WordSwapEmbedding(max_candidates=50)
