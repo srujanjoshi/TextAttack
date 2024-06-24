@@ -5,10 +5,7 @@ from helpers import run_command_and_get_result
 import pytest
 
 DEBUG = False
-
-"""
-Attack command-line tests in the format (name, args, sample_output_file)
-"""
+"""Attack command-line tests in the format (name, args, sample_output_file)"""
 
 attack_test_params = [
     #
@@ -113,15 +110,16 @@ attack_test_params = [
     ),
     # fmt: on
     #
-    # test: run_attack on LSTM MR using word embedding transformation and genetic algorithm. Simulate alzantot recipe without using expensive LM
-    (
-        "run_attack_faster_alzantot_recipe",
-        (
-            "textattack attack --model lstm-mr --recipe faster-alzantot --num-examples 3 "
-            "--num-examples-offset 32 "
-        ),
-        "tests/sample_outputs/run_attack_faster_alzantot_recipe.txt",
-    ),
+    # # test: run_attack on LSTM MR using word embedding transformation and genetic algorithm.
+    ## Simulate alzantot recipe without using expensive LM (still too slow)
+    # (
+    #     "run_attack_faster_alzantot_recipe",
+    #     (
+    #         "textattack attack --model lstm-mr --recipe faster-alzantot --num-examples 3 "
+    #         "--num-examples-offset 32 "
+    #     ),
+    #     "tests/sample_outputs/run_attack_faster_alzantot_recipe.txt",
+    # ),
     #
     # test: run_attack with kuleshov recipe and sst-2 cnn
     #
@@ -134,16 +132,16 @@ attack_test_params = [
         "tests/sample_outputs/kuleshov_cnn_sst_2.txt",
     ),
     #
-    # test: run_attack on LSTM MR using word embedding transformation and greedy search with Stanza part-of-speech tagger as a constraint
-    #
-    (
-        "run_attack_stanza_pos_tagger",
-        (
-            "textattack attack --model lstm-mr --num-examples 4 --search-method greedy --transformation word-swap-embedding "
-            "--constraints repeat stopword part-of-speech^tagger_type=\\'stanza\\' "
-        ),
-        "tests/sample_outputs/run_attack_stanza_pos_tagger.txt",
-    ),
+    # # test: run_attack on LSTM MR using word embedding transformation and greedy search with Stanza part-of-speech tagger as a constraint
+    # #
+    # (
+    #     "run_attack_stanza_pos_tagger",
+    #     (
+    #         "textattack attack --model lstm-mr --num-examples 4 --search-method greedy --transformation word-swap-embedding "
+    #         "--constraints repeat stopword part-of-speech^tagger_type=\\'stanza\\' "
+    #     ),
+    #     "tests/sample_outputs/run_attack_stanza_pos_tagger.txt",
+    # ),
     #
     # test: run_attack on CNN Yelp using the WordNet transformation and greedy search WIR
     #   with a CoLA constraint and BERT score

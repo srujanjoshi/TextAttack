@@ -5,6 +5,7 @@ Augmenter Recipes:
 Transformations and constraints can be used for simple NLP data augmentations. Here is a list of recipes for NLP data augmentations
 
 """
+
 import random
 
 from textattack.constraints.pre_transformation import (
@@ -190,7 +191,8 @@ class CheckListAugmenter(Augmenter):
 class CLAREAugmenter(Augmenter):
     """Li, Zhang, Peng, Chen, Brockett, Sun, Dolan.
 
-    "Contextualized Perturbation for Textual Adversarial Attack" (Li et al., 2020)
+    "Contextualized Perturbation for Textual Adversarial Attack" (Li et
+    al., 2020)
 
     https://arxiv.org/abs/2009.07502
 
@@ -261,4 +263,16 @@ class BackTranslationAugmenter(Augmenter):
         from textattack.transformations.sentence_transformations import BackTranslation
 
         transformation = BackTranslation(chained_back_translation=5)
+        super().__init__(transformation, **kwargs)
+
+
+class BackTranscriptionAugmenter(Augmenter):
+    """Sentence level augmentation that uses back transcription (TTS+ASR)."""
+
+    def __init__(self, **kwargs):
+        from textattack.transformations.sentence_transformations import (
+            BackTranscription,
+        )
+
+        transformation = BackTranscription()
         super().__init__(transformation, **kwargs)

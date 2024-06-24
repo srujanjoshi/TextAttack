@@ -57,18 +57,20 @@ class Attack:
         >>> # Construct our four components for `Attack`
         >>> from textattack.constraints.pre_transformation import RepeatModification, StopwordModification
         >>> from textattack.constraints.semantics import WordEmbeddingDistance
+        >>> from textattack.transformations import WordSwapEmbedding
+        >>> from textattack.search_methods import GreedyWordSwapWIR
 
         >>> goal_function = textattack.goal_functions.UntargetedClassification(model_wrapper)
         >>> constraints = [
         ...     RepeatModification(),
-        ...     StopwordModification()
+        ...     StopwordModification(),
         ...     WordEmbeddingDistance(min_cos_sim=0.9)
         ... ]
         >>> transformation = WordSwapEmbedding(max_candidates=50)
         >>> search_method = GreedyWordSwapWIR(wir_method="delete")
 
         >>> # Construct the actual attack
-        >>> attack = Attack(goal_function, constraints, transformation, search_method)
+        >>> attack = textattack.Attack(goal_function, constraints, transformation, search_method)
 
         >>> input_text = "I really enjoyed the new movie that came out last month."
         >>> label = 1 #Positive
@@ -81,8 +83,8 @@ class Attack:
         constraints: List[Union[Constraint, PreTransformationConstraint]],
         transformation: Transformation,
         search_method: SearchMethod,
-        transformation_cache_size=2 ** 15,
-        constraint_cache_size=2 ** 15,
+        transformation_cache_size=2**15,
+        constraint_cache_size=2**15,
     ):
         """Initialize an attack object.
 
@@ -154,6 +156,9 @@ class Attack:
         # The search method only needs access to the first argument. The second is only used
         # by the attack class when checking whether to skip the sample
         self.search_method.get_goal_results = self.goal_function.get_results
+
+        # Give search method access to get indices which need to be ordered / searched
+        self.search_method.get_indices_to_order = self.get_indices_to_order
 
         self.search_method.filter_transformations = self.filter_transformations
 
@@ -232,6 +237,28 @@ class Attack:
                         to_cuda(item)
 
         to_cuda(self)
+
+    def get_indices_to_order(self, current_text, **kwargs):
+        """Applies ``pre_transformation_constraints`` to ``text`` to get all
+        the indices that can be used to search and order.
+
+        Args:
+            current_text: The current ``AttackedText`` for which we need to find indices are eligible to be ordered.
+        Returns:
+            The length and the filtered list of indices which search methods can use to search/order.
+        """
+
+        indices_to_order = self.transformation(
+            current_text,
+            pre_transformation_constraints=self.pre_transformation_constraints,
+            return_indices=True,
+            **kwargs,
+        )
+
+        len_text = len(indices_to_order)
+
+        # Convert indices_to_order to list for easier shuffling later
+        return len_text, list(indices_to_order)
 
     def _get_transformations_uncached(self, current_text, original_text=None, **kwargs):
         """Applies ``self.transformation`` to ``text``, then filters the list
@@ -345,9 +372,9 @@ class Attack:
                 uncached_texts.append(transformed_text)
             else:
                 # promote transformed_text to the top of the LRU cache
-                self.constraints_cache[
-                    (current_text, transformed_text)
-                ] = self.constraints_cache[(current_text, transformed_text)]
+                self.constraints_cache[(current_text, transformed_text)] = (
+                    self.constraints_cache[(current_text, transformed_text)]
+                )
                 if self.constraints_cache[(current_text, transformed_text)]:
                     filtered_texts.append(transformed_text)
         filtered_texts += self._filter_transformations_uncached(
@@ -371,22 +398,23 @@ class Attack:
         final_result = self.search_method(initial_result)
         self.clear_cache()
         if final_result.goal_status == GoalFunctionResultStatus.SUCCEEDED:
-            return SuccessfulAttackResult(
+            result = SuccessfulAttackResult(
                 initial_result,
                 final_result,
             )
         elif final_result.goal_status == GoalFunctionResultStatus.SEARCHING:
-            return FailedAttackResult(
+            result = FailedAttackResult(
                 initial_result,
                 final_result,
             )
         elif final_result.goal_status == GoalFunctionResultStatus.MAXIMIZING:
-            return MaximizedAttackResult(
+            result = MaximizedAttackResult(
                 initial_result,
                 final_result,
             )
         else:
             raise ValueError(f"Unrecognized goal status {final_result.goal_status}")
+        return result
 
     def attack(self, example, ground_truth_output):
         """Attack a single example.

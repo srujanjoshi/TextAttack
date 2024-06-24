@@ -3,6 +3,7 @@ Beam Search
 ===============
 
 """
+
 import numpy as np
 
 from textattack.goal_function_results import GoalFunctionResultStatus
@@ -10,7 +11,7 @@ from textattack.search_methods import SearchMethod
 
 
 class BeamSearch(SearchMethod):
-    """An attack that maintinas a beam of the `beam_width` highest scoring
+    """An attack that maintains a beam of the `beam_width` highest scoring
     AttackedTexts, greedily updating the beam with the highest scoring
     transformations from the current beam.
 

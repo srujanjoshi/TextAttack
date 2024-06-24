@@ -8,6 +8,7 @@ import json
 import os
 import sys
 import time
+from typing import Dict, Optional
 
 import textattack
 from textattack.shared.utils import ARGS_SPLIT_TOKEN, load_module_from_file
@@ -66,7 +67,7 @@ CONSTRAINT_CLASS_NAMES = {
     # Semantics constraints
     #
     "embedding": "textattack.constraints.semantics.WordEmbeddingDistance",
-    "bert": "textattack.constraints.semantics.sentence_encoders.BERT",
+    "sbert": "textattack.constraints.semantics.sentence_encoders.SBERT",
     "infer-sent": "textattack.constraints.semantics.sentence_encoders.InferSent",
     "thought-vector": "textattack.constraints.semantics.sentence_encoders.ThoughtVector",
     "use": "textattack.constraints.semantics.sentence_encoders.UniversalSentenceEncoder",
@@ -111,6 +112,7 @@ GOAL_FUNCTION_CLASS_NAMES = {
     #
     # Classification goal functions
     #
+    "hardlabel-classification": "textattack.goal_functions.classification.HardLabelClassification",
     "targeted-classification": "textattack.goal_functions.classification.TargetedClassification",
     "untargeted-classification": "textattack.goal_functions.classification.UntargetedClassification",
     "input-reduction": "textattack.goal_functions.classification.InputReduction",
@@ -134,7 +136,6 @@ class AttackArgs:
             The number of successful adversarial examples we want. This is different from :obj:`num_examples`
             as :obj:`num_examples` only cares about attacking `N` samples while :obj:`num_successful_examples` aims to keep attacking
             until we have `N` successful cases.
-
             .. note::
                 If set, this argument overrides `num_examples` argument.
         num_examples_offset (:obj: `int`, `optional`, defaults to :obj:`0`):
@@ -148,7 +149,6 @@ class AttackArgs:
         query_budget (:obj:`int`, `optional`, defaults to :obj:`None`):
             The maximum number of model queries allowed per example attacked.
             If not set, we use the query budget set in the :class:`~textattack.goal_functions.GoalFunction` object (which by default is :obj:`float("inf")`).
-
             .. note::
                 Setting this overwrites the query budget set in :class:`~textattack.goal_functions.GoalFunction` object.
         checkpoint_interval (:obj:`int`, `optional`, defaults to :obj:`None`):
@@ -200,12 +200,14 @@ class AttackArgs:
     num_workers_per_device: int = 1
     log_to_txt: str = None
     log_to_csv: str = None
+    log_summary_to_json: str = None
     csv_coloring_style: str = "file"
     log_to_visdom: dict = None
     log_to_wandb: dict = None
     disable_stdout: bool = False
     silent: bool = False
     enable_advance_metrics: bool = False
+    metrics: Optional[Dict] = None
 
     def __post_init__(self):
         if self.num_successful_examples:
@@ -327,6 +329,15 @@ class AttackArgs:
             "If the last part of the path ends with `.csv` extension, the path is assumed to path for output file.",
         )
         parser.add_argument(
+            "--log-summary-to-json",
+            nargs="?",
+            default=default_obj.log_summary_to_json,
+            const="",
+            type=str,
+            help="Path to which to save attack summary as a JSON file. Set this argument if you want to save attack results summary in a JSON. "
+            "If the last part of the path ends with `.json` extension, the path is assumed to path for output file.",
+        )
+        parser.add_argument(
             "--csv-coloring-style",
             default=default_obj.csv_coloring_style,
             type=str,
@@ -376,12 +387,13 @@ class AttackArgs:
 
     @classmethod
     def create_loggers_from_args(cls, args):
+        """Creates AttackLogManager from an AttackArgs object."""
         assert isinstance(
             args, cls
         ), f"Expect args to be of type `{type(cls)}`, but got type `{type(args)}`."
 
         # Create logger
-        attack_log_manager = textattack.loggers.AttackLogManager()
+        attack_log_manager = textattack.loggers.AttackLogManager(args.metrics)
 
         # Get current time for file naming
         timestamp = time.strftime("%Y-%m-%d-%H-%M")
@@ -418,6 +430,22 @@ class AttackArgs:
             )
             attack_log_manager.add_output_csv(csv_file_path, color_method)
 
+        # if '--log-summary-to-json' specified with arguments
+        if args.log_summary_to_json is not None:
+            if args.log_summary_to_json.lower().endswith(".json"):
+                summary_json_file_path = args.log_summary_to_json
+            else:
+                summary_json_file_path = os.path.join(
+                    args.log_summary_to_json, f"{timestamp}-attack_summary_log.json"
+                )
+
+            dir_path = os.path.dirname(summary_json_file_path)
+            dir_path = dir_path if dir_path else "."
+            if not os.path.exists(dir_path):
+                os.makedirs(os.path.dirname(summary_json_file_path))
+
+            attack_log_manager.add_output_summary_json(summary_json_file_path)
+
         # Visdom
         if args.log_to_visdom is not None:
             attack_log_manager.enable_visdom(**args.log_to_visdom)
@@ -437,9 +465,10 @@ class AttackArgs:
 
 @dataclass
 class _CommandLineAttackArgs:
-    """Attack args for command line execution. This requires more arguments to
-    create ``Attack`` object as specified.
+    """Attack args for command line execution.
 
+    This requires more arguments to
+    create ``Attack`` object as specified.
     Args:
         transformation (:obj:`str`, `optional`, defaults to :obj:`"word-swap-embedding"`):
             Name of transformation to use.
@@ -478,8 +507,8 @@ class _CommandLineAttackArgs:
     interactive: bool = False
     parallel: bool = False
     model_batch_size: int = 32
-    model_cache_size: int = 2 ** 18
-    constraint_cache_size: int = 2 ** 18
+    model_cache_size: int = 2**18
+    constraint_cache_size: int = 2**18
 
     @classmethod
     def _add_parser_args(cls, parser):
@@ -679,6 +708,7 @@ class _CommandLineAttackArgs:
             if args.query_budget:
                 recipe.goal_function.query_budget = args.query_budget
             recipe.goal_function.model_cache_size = args.model_cache_size
+            recipe.goal_function.batch_size = args.model_batch_size
             recipe.constraint_cache_size = args.constraint_cache_size
             return recipe
         elif args.attack_from_file:

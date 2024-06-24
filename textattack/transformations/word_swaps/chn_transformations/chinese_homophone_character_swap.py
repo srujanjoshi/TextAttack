@@ -1,9 +1,14 @@
+"""
+Word Swap by chinese homophone
+-------------------------------------
+"""
+
 import os
 
 import pandas as pd
 import pinyin
 
-from .word_swap import WordSwap
+from . import WordSwap
 
 
 class ChineseHomophoneCharacterSwap(WordSwap):
@@ -17,11 +22,8 @@ class ChineseHomophoneCharacterSwap(WordSwap):
         path_list = path_list[:-2]
         path_list.append("shared/chinese_homophone_char.txt")
         homophone_dict_path = os.path.join("/", *path_list)
-
         homophone_dict = pd.read_csv(homophone_dict_path, header=None, sep="\n")
-
         homophone_dict = homophone_dict[0].str.split("\t", expand=True)
-
         self.homophone_dict = homophone_dict
 
     def _get_replacement_words(self, word):

@@ -3,7 +3,6 @@ AugmenterArgs Class
 ===================
 """
 
-
 from dataclasses import dataclass
 
 AUGMENTATION_RECIPE_NAMES = {
@@ -14,6 +13,7 @@ AUGMENTATION_RECIPE_NAMES = {
     "checklist": "textattack.augmentation.CheckListAugmenter",
     "clare": "textattack.augmentation.CLAREAugmenter",
     "back_trans": "textattack.augmentation.BackTranslationAugmenter",
+    "back_transcription": "textattack.augmentation.BackTranscriptionAugmenter",
 }
 
 

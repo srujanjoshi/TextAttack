@@ -3,7 +3,6 @@ Attack Logger Wrapper
 ========================
 """
 
-
 from abc import ABC
 
 
@@ -13,7 +12,7 @@ class Logger(ABC):
     def __init__(self):
         pass
 
-    def log_attack_result(self, result, examples_completed):
+    def log_attack_result(self, result, examples_completed=None):
         pass
 
     def log_summary_rows(self, rows, title, window_id):

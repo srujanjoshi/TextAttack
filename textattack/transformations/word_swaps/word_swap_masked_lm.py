@@ -3,7 +3,6 @@ Word Swap by BERT-Masked LM.
 -------------------------------
 """
 
-
 import itertools
 import re
 
@@ -116,9 +115,7 @@ class WordSwapMaskedLM(WordSwap):
             masked_text = current_text.replace_word_at_index(
                 index, self._lm_tokenizer.mask_token
             )
-            # Obtain window
-            masked_text = masked_text.text_window_around_index(index, self.window_size)
-            masked_texts.append(masked_text)
+            masked_texts.append(masked_text.text)
 
         i = 0
         # 2-D list where for each index to modify we have a list of replacement words

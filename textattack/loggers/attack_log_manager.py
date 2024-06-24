@@ -3,6 +3,8 @@ Managing Attack Logs.
 ========================
 """
 
+from typing import Dict, Optional
+
 from textattack.metrics.attack_metrics import (
     AttackQueries,
     AttackSuccessRate,
@@ -10,16 +12,29 @@ from textattack.metrics.attack_metrics import (
 )
 from textattack.metrics.quality_metrics import Perplexity, USEMetric
 
-from . import CSVLogger, FileLogger, VisdomLogger, WeightsAndBiasesLogger
+from . import (
+    CSVLogger,
+    FileLogger,
+    JsonSummaryLogger,
+    VisdomLogger,
+    WeightsAndBiasesLogger,
+)
 
 
 class AttackLogManager:
     """Logs the results of an attack to all attached loggers."""
 
-    def __init__(self):
+    # metrics maps strings (metric names) to textattack.metric.Metric objects
+    metrics: Dict
+
+    def __init__(self, metrics: Optional[Dict]):
         self.loggers = []
         self.results = []
         self.enable_advance_metrics = False
+        if metrics is None:
+            self.metrics = {}
+        else:
+            self.metrics = metrics
 
     def enable_stdout(self):
         self.loggers.append(FileLogger(stdout=True))
@@ -38,6 +53,9 @@ class AttackLogManager:
 
     def add_output_csv(self, filename, color_method):
         self.loggers.append(CSVLogger(filename=filename, color_method=color_method))
+
+    def add_output_summary_json(self, filename):
+        self.loggers.append(JsonSummaryLogger(filename=filename))
 
     def log_result(self, result):
         """Logs an ``AttackResult`` on each of `self.loggers`."""
@@ -117,6 +135,9 @@ class AttackLogManager:
         summary_table_rows.append(
             ["Avg num queries:", attack_query_stats["avg_num_queries"]]
         )
+
+        for metric_name, metric in self.metrics.items():
+            summary_table_rows.append([metric_name, metric.calculate(self.results)])
 
         if self.enable_advance_metrics:
             perplexity_stats = Perplexity().calculate(self.results)

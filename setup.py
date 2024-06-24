@@ -27,19 +27,19 @@ extras["test"] = [
 ]
 
 extras["tensorflow"] = [
-    "tensorflow==2.5.0",
+    "tensorflow>=2.9.1",
     "tensorflow_hub",
-    "tensorflow_text>=2",
+    "tensorflow_text>=2.9.0",
     "tensorboardX",
-    "tensorflow-estimator==2.5.0",
+    "tensorflow-estimator>=2.9.0",
 ]
 
 extras["optional"] = [
-    "sentence_transformers>0.2.6",
+    "sentence_transformers==2.2.0",
     "stanza",
     "visdom",
     "wandb",
-    "gensim==3.8.3",
+    "gensim",
 ]
 
 # For developers, install development tools along with all optional dependencies.
@@ -78,6 +78,6 @@ setuptools.setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    python_requires=">=3.6",
+    python_requires=">=3.8",
     install_requires=open("requirements.txt").readlines(),
 )

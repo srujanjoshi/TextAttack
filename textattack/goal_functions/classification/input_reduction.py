@@ -1,9 +1,8 @@
 """
 
-Determine if maintaining the same predicted label
+Determine if maintaining the same predicted label (input reduction)
 ---------------------------------------------------------------------
 """
-
 
 from .classification_goal_function import ClassificationGoalFunction
 

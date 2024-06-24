@@ -3,6 +3,7 @@ Word Swap by Changing Number
 -------------------------------
 
 """
+
 import more_itertools as mit
 from num2words import num2words
 import numpy as np
@@ -70,7 +71,7 @@ class WordSwapChangeNumber(WordSwap):
 
         # replace original numbers with new numbers
         transformed_texts = []
-        for (idx, word) in num_words:
+        for idx, word in num_words:
             replacement_words = self._get_new_number(word)
             for r in replacement_words:
                 if r == word:
@@ -96,11 +97,11 @@ class WordSwapChangeNumber(WordSwap):
                 num = w2n.word_to_num(word)
                 num_list = self._alter_number(num)
                 return [num2words(n) for n in num_list]
-            except ValueError:
+            except (ValueError, IndexError):
                 return []
 
     def _alter_number(self, num):
-        """helper function of _get_new_number, replace a number with another
+        """Helper function of _get_new_number, replace a number with another
         random number within the range of self.max_change."""
         if num not in [0, 2, 4]:
             change = int(num * self.max_change) + 1

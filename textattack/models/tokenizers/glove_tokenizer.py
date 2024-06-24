@@ -4,7 +4,6 @@ Glove Tokenizer
 
 """
 
-
 import json
 import tempfile
 
@@ -46,7 +45,7 @@ class WordLevelTokenizer(hf_tokenizers.implementations.BaseTokenizer):
         word_list_file = tempfile.NamedTemporaryFile()
         word_list_file.write(json.dumps(word_id_map).encode())
 
-        word_level = hf_tokenizers.models.WordLevel(
+        word_level = hf_tokenizers.models.WordLevel.from_file(
             word_list_file.name, unk_token=str(unk_token)
         )
         tokenizer = hf_tokenizers.Tokenizer(word_level)

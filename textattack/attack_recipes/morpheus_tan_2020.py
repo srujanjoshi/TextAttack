@@ -5,6 +5,7 @@ MORPHEUS2020
 
 
 """
+
 from textattack import Attack
 from textattack.constraints.pre_transformation import (
     RepeatModification,
@@ -20,14 +21,14 @@ from .attack_recipe import AttackRecipe
 class MorpheusTan2020(AttackRecipe):
     """Samson Tan, Shafiq Joty, Min-Yen Kan, Richard Socher.
 
-    It’s Morphin’ Time! Combating Linguistic Discrimination with Inflectional Perturbations
+    It’s Morphin’ Time! Combating Linguistic Discrimination with
+    Inflectional Perturbations
 
     https://www.aclweb.org/anthology/2020.acl-main.263/
     """
 
     @staticmethod
     def build(model_wrapper):
-
         #
         # Goal is to minimize BLEU score between the model output given for the
         # perturbed input sequence and the reference translation
